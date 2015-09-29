@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 import csv
 import json
+from copy import deepcopy
 from collections import defaultdict
 
 import click
@@ -14,7 +15,7 @@ def check_for_direct(rfile, package_dict_list):
         else:
             package['direct_req'] = "no"
 
-def make_dict_from_list(source_list):
+def make_dict_from_list(source_list, language):
     """ each line of the source list should have the following indices when
         split:
         0 = requirements filename (hopefully absolute)
@@ -31,7 +32,7 @@ def make_dict_from_list(source_list):
             'package_version': this_req_list[2],
             'package_home_page': this_req_list[3],
             'package_license': this_req_list[4],
-            'language': 'python'
+            'language': language
             })
     for req_file in lib_dict:
         # this is pass-by-ref, and modifies the list
@@ -49,7 +50,7 @@ def write_csv(csv_dict, output_file):
         'language'
         ]
     with open(output_file, 'w') as csvfile:
-        click.echo("Writing python csv to {}".format(outfile))
+        click.echo("Writing csv to {}".format(output_file))
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
         for req_file in csv_dict:
@@ -57,29 +58,28 @@ def write_csv(csv_dict, output_file):
             for record in csv_dict[req_file]:
                 writer.writerow(record)
 
-def add_js_from_package_json(csv_dict, package_json):
-    with open(package_json, 'r') as f:
-        npm_dict = json.load(f)
-
-    
-
-
 @click.command()
-@click.option('--reqlist', default='requirements_list')
-@click.option('--package_json', default='~/workspace/DataRobot/package.json')
+@click.option('--python_list', default='/tmp/python_oss_info.txt')
+@click.option('--javascript_list', default='/tmp/javascript_oss_info.txt')
 @click.option('--output_file', default='/tmp/license_libs.csv')
-def gencsv(reqlist, package_json, output_file):
+def gencsv(python_list, javascript_list, output_file):
     click.echo("Creating csv...")
-    with open(reqlist) as f:
-        source_list = f.readlines()
+    with open(python_list) as f:
+        python_source_list = f.readlines()
 
-    csv_dict = make_dict_from_list(source_list)
-    add_js_from_package_json(csv_dict, package_json)
+    with open(javascript_list) as f:
+        javascript_source_list = f.readlines()
+
+    python_dict = make_dict_from_list(python_source_list, 'python')
+    javascript_dict = make_dict_from_list(javascript_source_list, 'javascript')
+    csv_dict = deepcopy(python_dict)
+    csv_dict.update(javascript_dict)
     write_csv(csv_dict, output_file)
 
 if __name__ == '__main__':
     try:
         gencsv()
-    except:
+    except Exception as e:
         click.echo("oops, problem")
+        click.echo(e.msg)
         raise
