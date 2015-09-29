@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import csv
+import json
 from collections import defaultdict
 
 import click
@@ -29,24 +30,25 @@ def make_dict_from_list(source_list):
             'package_name': this_req_list[1],
             'package_version': this_req_list[2],
             'package_home_page': this_req_list[3],
-            'package_license': this_req_list[4]
+            'package_license': this_req_list[4],
+            'language': 'python'
             })
     for req_file in lib_dict:
         # this is pass-by-ref, and modifies the list
         check_for_direct(req_file, lib_dict[req_file])
     return lib_dict
 
-def write_csv(csv_dict):
-    outfile = '/tmp/python_libs.csv'
+def write_csv(csv_dict, output_file):
     fieldnames = [
         'req_file',
         'package_name',
         'package_version',
         'package_home_page',
         'package_license',
-        'direct_req'
+        'direct_req',
+        'language'
         ]
-    with open(outfile, 'w') as csvfile:
+    with open(output_file, 'w') as csvfile:
         click.echo("Writing python csv to {}".format(outfile))
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
@@ -55,16 +57,29 @@ def write_csv(csv_dict):
             for record in csv_dict[req_file]:
                 writer.writerow(record)
 
+def add_js_from_package_json(csv_dict, package_json):
+    with open(package_json, 'r') as f:
+        npm_dict = json.load(f)
+
+    
+
 
 @click.command()
-@click.argument('filename')
-def gencsv(filename):
+@click.option('--reqlist', default='requirements_list')
+@click.option('--package_json', default='~/workspace/DataRobot/package.json')
+@click.option('--output_file', default='/tmp/license_libs.csv')
+def gencsv(reqlist, package_json, output_file):
     click.echo("Creating csv...")
-    with open(filename) as f:
+    with open(reqlist) as f:
         source_list = f.readlines()
 
     csv_dict = make_dict_from_list(source_list)
-    write_csv(csv_dict)
+    add_js_from_package_json(csv_dict, package_json)
+    write_csv(csv_dict, output_file)
 
 if __name__ == '__main__':
-    gencsv()
+    try:
+        gencsv()
+    except:
+        click.echo("oops, problem")
+        raise
