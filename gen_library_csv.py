@@ -26,12 +26,20 @@ def make_dict_from_list(source_list, language):
     """
     lib_dict = defaultdict(list)
     for line in source_list:
-        this_req_list = line.strip().split()
+        this_req_list = line.strip().split('|')
+        try:
+            package_home_page = this_req_list[3]
+        except IndexError as e:
+            package_home_page = 'unknown'
+        try:
+            package_license = this_req_list[4]
+        except IndexError as e:
+            package_license = 'unknown'
         lib_dict[this_req_list[0]].append({
             'package_name': this_req_list[1],
             'package_version': this_req_list[2],
-            'package_home_page': this_req_list[3],
-            'package_license': this_req_list[4],
+            'package_home_page': package_home_page,
+            'package_license': package_license,
             'language': language
             })
     for req_file in lib_dict:
@@ -60,9 +68,10 @@ def write_csv(csv_dict, output_file):
 
 @click.command()
 @click.option('--python_list', default='/tmp/python_oss_info.txt')
+@click.option('--python3_list', default='/tmp/python3_oss_info.txt')
 @click.option('--javascript_list', default='/tmp/javascript_oss_info.txt')
 @click.option('--output_file', default='/tmp/license_libs.csv')
-def gencsv(python_list, javascript_list, output_file):
+def gencsv(python_list, javascript_list, output_file, python3_list):
     click.echo("Creating csv...")
     with open(python_list) as f:
         python_source_list = f.readlines()
@@ -70,16 +79,16 @@ def gencsv(python_list, javascript_list, output_file):
     with open(javascript_list) as f:
         javascript_source_list = f.readlines()
 
+#    with open(python3_list) as f:
+#        python3_source_list = f.readlines()
+
     python_dict = make_dict_from_list(python_source_list, 'python')
     javascript_dict = make_dict_from_list(javascript_source_list, 'javascript')
+#    python3_dict = make_dict_from_list(python3_source_list, 'python3')
     csv_dict = deepcopy(python_dict)
     csv_dict.update(javascript_dict)
+#    csv_dict.update(python3_dict)
     write_csv(csv_dict, output_file)
 
 if __name__ == '__main__':
-    try:
-        gencsv()
-    except Exception as e:
-        click.echo("oops, problem")
-        click.echo(e.msg)
-        raise
+    gencsv()
