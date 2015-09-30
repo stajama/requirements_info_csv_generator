@@ -21,3 +21,4 @@ Those are the default locations for the python script, so you can just run that 
 Which will output a file to /tmp/license\_libs.csv.
 
 Which can be imported to google spreadsheet to play with to your hearts content.
+
