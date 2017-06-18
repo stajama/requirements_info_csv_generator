@@ -3,7 +3,7 @@ Quick and dirty scripting to generate a requirements listing with licenses in a 
 How to run this to generate a basic csv:
 
 First, define the lists of requirements.txt files and package.json files.
-The default (and, because fast and dirty, currently required) locaiton for this is 
+The default (and, because fast and dirty, currently required) location for this is 
 in the current directory, python\_requirements\_list and javascript\_requirements\_list, respectively.  
 
 It's literally just a list of files, but if those files don't exist or they're not in the proper format, it will fail ugly.
